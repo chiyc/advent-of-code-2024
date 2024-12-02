@@ -1,9 +1,10 @@
 from collections import Counter
+from typing import Tuple
 
 from lib import read_input, timer
 
 
-def parse_lists():
+def parse_lists() -> Tuple[list[int], list[int]]:
     list0 = []
     list1 = []
 
@@ -15,7 +16,7 @@ def parse_lists():
     return list0, list1
 
 
-def part_1(list0, list1):
+def part_1(list0: list[int], list1: list[int]) -> int:
     list0.sort()
     list1.sort()
 
@@ -23,7 +24,7 @@ def part_1(list0, list1):
     return total_distance
 
 
-def part_2(list0, list1):
+def part_2(list0: list[int], list1: list[int]) -> int:
     list1_counts = Counter(list1)
     return sum([n * list1_counts[n] for n in list0])
 

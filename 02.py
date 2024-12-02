@@ -1,7 +1,7 @@
 from lib import read_input, timer
 
 
-def parse_reports():
+def parse_reports() -> list[list[int]]:
     reports = []
     for line in read_input(2):
         report = [int(n) for n in line.split(' ')]
@@ -9,11 +9,11 @@ def parse_reports():
     return reports
 
 
-def report_intervals(report):
+def report_intervals(report: list[int]) -> list[int]:
     return [n - report[i - 1] for i, n in enumerate(report) if i > 0]
 
 
-def is_safe(intervals, min_step, max_step):
+def is_safe(intervals: list[int], min_step: int, max_step: int):
     safely_increases = all(
         min_step <= step and step <= max_step for step in intervals
     )
@@ -23,14 +23,14 @@ def is_safe(intervals, min_step, max_step):
     return safely_increases or safely_decreases
 
 
-def count_safe_reports(reports, min_step, max_step):
+def count_safe_reports(reports: list[list[int]], min_step: int, max_step: int) -> int:
     return sum(
         is_safe(report_intervals(report), min_step, max_step)
         for report in reports
     )
 
 
-def count_safe_reports_dampened(reports, min_step, max_step):
+def count_safe_reports_dampened(reports: list[list[int]], min_step: int, max_step: int) -> int:
     safe_count = 0
     for report in reports:
         report_variations = (
