@@ -1,5 +1,6 @@
 [tool.poetry]
 name = "advent-of-code-2024"
+package-mode = false
 version = "0.1.0"
 description = ""
 authors = ["Chi <cychoi@zoho.com>"]
