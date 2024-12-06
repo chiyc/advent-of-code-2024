@@ -149,15 +149,14 @@ class World:
         guard_position_history = set(
             history.position for history in self.guard.history
         )
-
         loops = 0
         for pos in guard_position_history:
-            if pos != self.guard.position and self.map[pos] != '#':
+            world.reset()
+            if pos != self.starting_guard.position:
                 self.map.place_obstacle(pos)
             status = world.play()
             if status == 'LOOP':
                 loops += 1
-            world.reset()
         return loops
 
 
