@@ -1,7 +1,6 @@
 import copy
 
-from collections import defaultdict
-from typing import Iterable, Literal, NamedTuple, NewType, Self, Tuple, Union
+from typing import Iterable, Literal, NamedTuple, Self, Union
 
 from lib import read_input, timer
 
@@ -66,9 +65,6 @@ class Map:
 
     def __len__(self):
         return len(self._grid)
-
-    def __iter__(self):
-        return (row for row in self._grid)
 
     def __getitem__(self, pos: Pos):
         if not 0 <= pos.i <= self.max_row or not 0 <= pos.j <= self.max_col:
