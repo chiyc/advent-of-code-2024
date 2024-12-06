@@ -143,16 +143,21 @@ class World:
         return len(set([history.position for history in self.guard.history]))
 
     def count_possible_loops(self) -> int:
+        """
+        Should be run after world.play() has run and guard position history exists
+        """
+        guard_position_history = set(
+            history.position for history in self.guard.history
+        )
+
         loops = 0
-        for i, row in enumerate(self.map):
-            for j, _ in enumerate(row):
-                pos = Pos(i, j)
-                if pos != self.guard.position and self.map[pos] != '#':
-                    self.map.place_obstacle(pos)
-                status = world.play()
-                if status == 'LOOP':
-                    loops += 1
-                world.reset()
+        for pos in guard_position_history:
+            if pos != self.guard.position and self.map[pos] != '#':
+                self.map.place_obstacle(pos)
+            status = world.play()
+            if status == 'LOOP':
+                loops += 1
+            world.reset()
         return loops
 
 
@@ -165,8 +170,7 @@ if __name__ == '__main__':
         result = world.count_guard_positions()
     print(f'Result: {result}\n')    # 5318
 
-    world.reset()
     print('Day 6, Part 2')
-    with timer():   # Takes about 3 minutes to run
+    with timer():   # Takes about 30 seconds to run
         result = world.count_possible_loops()
     print(f'Result: {result}\n')    # 1831
