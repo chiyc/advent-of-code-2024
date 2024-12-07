@@ -13,7 +13,7 @@ def report_intervals(report: list[int]) -> list[int]:
     return [n - report[i - 1] for i, n in enumerate(report) if i > 0]
 
 
-def is_safe(intervals: list[int], min_step: int, max_step: int):
+def is_safe(intervals: list[int], min_step: int, max_step: int) -> bool:
     safely_increases = all(
         min_step <= step and step <= max_step for step in intervals
     )
@@ -23,14 +23,18 @@ def is_safe(intervals: list[int], min_step: int, max_step: int):
     return safely_increases or safely_decreases
 
 
-def count_safe_reports(reports: list[list[int]], min_step: int, max_step: int) -> int:
+def count_safe_reports(
+    reports: list[list[int]], min_step: int, max_step: int
+) -> int:
     return sum(
         is_safe(report_intervals(report), min_step, max_step)
         for report in reports
     )
 
 
-def count_safe_reports_dampened(reports: list[list[int]], min_step: int, max_step: int) -> int:
+def count_safe_reports_dampened(
+    reports: list[list[int]], min_step: int, max_step: int
+) -> int:
     safe_count = 0
     for report in reports:
         report_variations = (

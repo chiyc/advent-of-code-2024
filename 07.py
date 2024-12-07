@@ -21,25 +21,29 @@ def parse_equations() -> list[Equation]:
     return equations
 
 
-Operators = TypeAliasType('Operators', Tuple[Callable, ...])
+Operators = TypeAliasType(
+    'Operators', Tuple[Callable[[Iterable[int]], int], ...]
+)
 
 
 def operator_combinations(
     operators: Operators, length: int
 ) -> Iterable[Operators]:
-    def combination_helper(combinations, remaining):
+    def combination_helper(
+        combinations: Iterable[Operators], remaining: int
+    ) -> Iterable[Operators]:
         if not remaining:
             return combinations
 
         next_combinations = [
-            combo + [op] for op in operators for combo in combinations
+            combo + (op,) for op in operators for combo in combinations
         ]
         return combination_helper(next_combinations, remaining - 1)
 
-    return combination_helper([[sum]], length - 1)
+    return combination_helper([(sum,)], length - 1)
 
 
-def test_equation(equation: Equation, operators: Operators):
+def test_equation(equation: Equation, operators: Operators) -> bool:
     evaluate = lambda total, op_num: op_num[0]((total, op_num[1]))
     test_result = functools.reduce(evaluate, zip(operators, equation.nums), 0)
     return test_result == equation.total
@@ -57,7 +61,7 @@ def test_equations(equations: Iterable[Equation], operators: Operators) -> int:
     return calibration_result
 
 
-def concatenate(numbers: Iterable[int]):
+def concatenate(numbers: Iterable[int]) -> int:
     return int(''.join(str(num) for num in numbers))
 
 

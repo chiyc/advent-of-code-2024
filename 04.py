@@ -1,5 +1,3 @@
-import re
-
 from typing import Tuple, TypeAlias
 
 from lib import read_input, timer

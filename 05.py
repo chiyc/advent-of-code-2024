@@ -25,7 +25,7 @@ class Printer:
             self.numbers_before[rule.r].add(rule.l)
 
     @staticmethod
-    def from_input(input: Iterable[str]):
+    def from_input(input: Iterable[str]) -> Printer:
         rules = []
         for line in input:
             if line == '':
@@ -39,7 +39,7 @@ class Printer:
 
         return Printer(rules, updates)
 
-    def validate_update(self, update) -> bool:
+    def validate_update(self, update: Update) -> bool:
         for i, n in enumerate(update):
             before_n = set(update[:i])
             after_n = set(update[i + 1 :])

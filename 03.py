@@ -9,16 +9,16 @@ def read_memory() -> list[str]:
     return list(read_input(3))
 
 
-def find_mul_matches(memory: list[str]) -> Iterable[re.Match]:
+def find_mul_matches(memory: list[str]) -> Iterable[re.Match[str]]:
     PATTERN = r'(?P<instr>mul)\((?P<l>\d+),(?P<r>\d+)\)'
 
-    matches: list[re.Match] = []
+    matches: list[re.Match[str]] = []
     for line in memory:
         matches.extend(list(re.finditer(PATTERN, line)))
     return matches
 
 
-def sum_mul_results(mul_matches: Iterable[re.Match]) -> int:
+def sum_mul_results(mul_matches: Iterable[re.Match[str]]) -> int:
     return sum(
         int(m.group('l')) * int(m.group('r'))
         for m in mul_matches
@@ -26,16 +26,18 @@ def sum_mul_results(mul_matches: Iterable[re.Match]) -> int:
     )
 
 
-def find_do_dont_mul_matches(memory: list[str]) -> Iterable[re.Match]:
+def find_do_dont_mul_matches(memory: list[str]) -> Iterable[re.Match[str]]:
     PATTERN = r"(?P<instr>do|don't|mul)\(((?P<l>\d+),(?P<r>\d+))?\)"
 
-    matches: list[re.Match] = []
+    matches: list[re.Match[str]] = []
     for line in memory:
         matches.extend(list(re.finditer(PATTERN, line)))
     return matches
 
 
-def sum_enabled_mul_results(instruction_matches: Iterable[re.Match]) -> int:
+def sum_enabled_mul_results(
+    instruction_matches: Iterable[re.Match[str]],
+) -> int:
     result = 0
 
     enabled = True

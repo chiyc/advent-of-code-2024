@@ -9,23 +9,25 @@ class Pos:
     i: int
     j: int
 
-    def __init__(self, i, j):
+    def __init__(self, i: int, j: int):
         self.i = i
         self.j = j
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Pos):
+            return NotImplemented
         return self.i == other.i and self.j == other.j
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash((self.i, self.j))
 
-    def __add__(self, other: Self):
+    def __add__(self, other: Self) -> Pos:
         return Pos(self.i + other.i, self.j + other.j)
 
-    def __radd__(self, other: Self):
+    def __radd__(self, other: Self) -> Pos:
         return self.__add__(other)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f'Pos({self.i}, {self.j})'
 
 
@@ -42,19 +44,19 @@ class Guard:
         self.orientation: Pos = facing
         self.history: set[History] = set()
 
-    def next_position(self):
+    def next_position(self) -> Pos:
         return self.position + self.orientation
 
-    def move(self, next_position: Pos):
+    def move(self, next_position: Pos) -> None:
         self.history.add(History(self.position, self.orientation))
         self.position = next_position
 
-    def turn(self):
+    def turn(self) -> None:
         current_orientation = Guard.orientations.index(self.orientation)
         next_orientation = (current_orientation + 1) % len(Guard.orientations)
         self.orientation = Guard.orientations[next_orientation]
 
-    def has_looped(self):
+    def has_looped(self) -> bool:
         return History(self.position, self.orientation) in self.history
 
 
@@ -63,10 +65,10 @@ class Map:
         self._grid = map_grid
         self._obstacles: set[Pos] = set()
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._grid)
 
-    def __getitem__(self, pos: Pos):
+    def __getitem__(self, pos: Pos) -> str:
         if not 0 <= pos.i <= self.max_row or not 0 <= pos.j <= self.max_col:
             return ' '
         if pos in self._obstacles:
@@ -74,21 +76,24 @@ class Map:
         return self._grid[pos.i][pos.j]
 
     @property
-    def max_row(self):
+    def max_row(self) -> int:
         return len(self._grid) - 1
 
     @property
-    def max_col(self):
+    def max_col(self) -> int:
         return len(self._grid[0]) - 1
 
-    def reset(self):
+    def reset(self) -> None:
         self._obstacles = set()
 
-    def place_obstacle(self, pos: Pos):
+    def place_obstacle(self, pos: Pos) -> None:
         self._obstacles.add(pos)
 
-    def contains(self, pos: Pos):
-        return 0 <= pos.i <= self.max_row and 0 <= pos.j <= self.max_col
+    def contains(self, pos: Pos) -> bool:
+        contains: bool = (
+            0 <= pos.i <= self.max_row and 0 <= pos.j <= self.max_col
+        )
+        return contains
 
 
 class World:
@@ -98,7 +103,7 @@ class World:
         self.guard = guard
 
     @staticmethod
-    def from_input(input: Iterable[str]):
+    def from_input(input: Iterable[str]) -> World:
         map_grid: list[list[str]] = []
         guard_pos: Union[None, Pos] = None
         for i, line in enumerate(input):
@@ -129,7 +134,7 @@ class World:
         else:
             return None
 
-    def reset(self):
+    def reset(self) -> None:
         self.map.reset()
         self.guard = Guard(
             self.starting_guard.position, self.starting_guard.orientation
