@@ -16,7 +16,7 @@ class Pos:
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Pos):
-            return NotImplemented
+            raise NotImplemented
         return self.i == other.i and self.j == other.j
 
     def __hash__(self) -> int:
