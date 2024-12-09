@@ -125,10 +125,13 @@ def compact_disk_map_unfragmented(disk_map: DiskMap) -> DiskMap:
                     'h', [-1] * file.size
                 )
 
-                new_file_block = Block(file.id, free_start, file.size)
+                old_file_block_index = bisect.bisect_left(compacted_files, file)
+                del compacted_files[old_file_block_index]
+
+                compacted_file_block = Block(file.id, free_start, file.size)
                 compacted_files.insert(
-                    bisect.bisect_right(compacted_files, new_file_block),
-                    new_file_block,
+                    bisect.bisect_right(compacted_files, compacted_file_block),
+                    compacted_file_block,
                 )
 
                 free_size_left = free.size - file.size
@@ -141,7 +144,11 @@ def compact_disk_map_unfragmented(disk_map: DiskMap) -> DiskMap:
 
                 break
 
-    return DiskMap(disk_map.disk, compacted_files, disk_map.free)
+    return DiskMap(
+        disk_map.disk,
+        compacted_files,
+        disk_map.free,
+    )
 
 
 def disk_checksum(disk: Disk) -> int:
