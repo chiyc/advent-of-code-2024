@@ -1,6 +1,7 @@
 from __future__ import annotations
 import array
 import bisect
+import copy
 
 from collections import deque
 from typing import NamedTuple, NewType
@@ -106,21 +107,62 @@ def compact_disk_map(disk_map: DiskMap) -> DiskMap:
     return disk_map
 
 
+def compact_disk_map_unfragmented(disk_map: DiskMap) -> DiskMap:
+    compacted_files = copy.copy(disk_map.files)
+    for file in reversed(disk_map.files):
+        for i, free in enumerate(disk_map.free):
+            if free.loc > file.loc:
+                break
+
+            if free.size >= file.size:
+                free_start = free.loc
+                free_end = free_start + file.size
+
+                disk_map.disk[free_start:free_end] = array.array(
+                    'h', [file.id] * file.size
+                )
+                disk_map.disk[file.loc : file.loc + file.size] = array.array(
+                    'h', [-1] * file.size
+                )
+
+                new_file_block = Block(file.id, free_start, file.size)
+                compacted_files.insert(
+                    bisect.bisect_right(compacted_files, new_file_block),
+                    new_file_block,
+                )
+
+                free_size_left = free.size - file.size
+                if not free_size_left:
+                    del disk_map.free[i]
+                else:
+                    disk_map.free[i] = Block(
+                        -1, free_start + file.size, free_size_left
+                    )
+
+                break
+
+    return DiskMap(disk_map.disk, compacted_files, disk_map.free)
+
+
 def disk_checksum(disk: Disk) -> int:
-    return sum([idx * file_id for idx, file_id in enumerate(disk)])
+    return sum(
+        [idx * file_id for idx, file_id in enumerate(disk) if file_id >= 0]
+    )
 
 
 if __name__ == '__main__':
     dense_disk_map = parse_dense_disk_map()
-    disk_map = read_dense_disk_map(dense_disk_map)
 
     print('Day 9, Part 1')
     with timer():
+        disk_map = read_dense_disk_map(dense_disk_map)
         compacted_disk_map = compact_disk_map(disk_map)
         result = disk_checksum(compacted_disk_map.disk)
     print(f'Result: {result}\n')    # 6421128769094
 
     print('Day 9, Part 2')
     with timer():
-        result = 0
-    print(f'Result: {result}\n')    #
+        disk_map = read_dense_disk_map(dense_disk_map)
+        compacted_disk_map = compact_disk_map_unfragmented(disk_map)
+        result = disk_checksum(compacted_disk_map.disk)
+    print(f'Result: {result}\n')    # 6448168620520
