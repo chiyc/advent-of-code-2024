@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Callable, NamedTuple, NewType, TypeAliasType
+from typing import Callable, NamedTuple, NewType, Optional, TypeAliasType
 
 from lib import read_input, timer
 
@@ -29,12 +29,12 @@ def blaze_trailhead(trail_map: TrailMap, start: Pos) -> list[Pos]:
     MAX_ROW = len(trail_map) - 1
     MAX_COL = len(trail_map[0]) - 1
 
-    def blaze_trail(pos: Pos, prev_height: int) -> list[Pos]:
+    def blaze_trail(pos: Pos, prev_height: Optional[int]) -> list[Pos]:
         if not 0 <= pos.i <= MAX_ROW or not 0 <= pos.j <= MAX_COL:
             return []
 
         height = trail_map[pos.i][pos.j]
-        if height != prev_height + 1:
+        if prev_height is not None and height != prev_height + 1:
             return []
 
         if trail_map[pos.i][pos.j] == 9:
@@ -47,7 +47,7 @@ def blaze_trailhead(trail_map: TrailMap, start: Pos) -> list[Pos]:
             for summit in blaze_trail(pos + step, height)
         ]
 
-    return blaze_trail(start, -1)
+    return blaze_trail(start, None)
 
 
 Scorer = TypeAliasType('Scorer', Callable[[list[Pos]], int])
