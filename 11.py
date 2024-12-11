@@ -10,13 +10,11 @@ Stones = TypeAliasType('Stones', Counter[int])
 
 
 def parse_stones() -> Stones:
-    return Counter(
-        int(n) for line in read_input(11) for n in line.split(' ')
-    )
+    return Counter(int(n) for line in read_input(11) for n in line.split(' '))
 
 
 def blink_once(stones: Stones) -> Stones:
-    next_stones: Counter[int] = Counter()
+    next_stones: Stones = Counter()
 
     for stone, count in stones.items():
         stone_text = str(stone)
@@ -37,7 +35,7 @@ def blink_once(stones: Stones) -> Stones:
 
 
 def blink(stones: Stones, times: int) -> Stones:
-    for i in range(times):
+    for _ in range(times):
         stones = blink_once(stones)
     return stones
 
