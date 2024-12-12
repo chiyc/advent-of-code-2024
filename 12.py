@@ -44,20 +44,6 @@ class Region:
     fences: list[Fence]
 
 
-"""
-How to represent fence units?
-If I cross from 0,5 to 0,6 that's a N-S fence post that goes from (0,5) to (1,5).  if I take the abs difference, we get (1,0), a NS
-           from 1,5 to 1,6 that's a N-S fence post that goes from (1,5) to (2,5)
-From 4,5 to 4,4 that's a fence post that goes from (4,5) to (5,5) |0|1|2|3|4|5. if I take abs diff, we get (1,0)
-
-What about (24, 31) to (25, 31) the abs diff is (1, 0) in terms of positions, but the fence post is
-Fence post segments should always be sorted.
-
-Maybe I can represent them specifically to the region. In terms of Pos and Diff. Sort them by Diff, then in each diff, sort by row or col. look for continuous ones
-
-"""
-
-
 def find_regions(map: Map) -> list[Region]:
     MAX_ROW = len(map) - 1
     MAX_COL = len(map[0]) - 1
