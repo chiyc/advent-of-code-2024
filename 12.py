@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections import deque
 from dataclasses import dataclass
-from typing import NamedTuple, NewType
+from typing import NamedTuple, NewType, Tuple, TypeAliasType
 
 from lib import read_input, timer
 
@@ -20,16 +20,42 @@ class Pos(NamedTuple):
             raise NotImplemented
         return Pos(self.i + other.i, self.j + other.j)
 
+    def __sub__(self, other: object) -> Pos:
+        if not isinstance(other, Pos):
+            raise NotImplemented
+        return Pos(self.i - other.i, self.j - other.j)
+
 
 def parse_map() -> Map:
     return Map([[Tile(c) for c in list(line)] for line in read_input(12)])
+
+
+class Dir(Pos):
+    pass
+
+
+Fence = TypeAliasType('Fence', Tuple[Pos, Dir])
 
 
 @dataclass
 class Region:
     type: Tile
     positions: set[Pos]
-    perimeter: int
+    fences: list[Fence]
+
+
+"""
+How to represent fence units?
+If I cross from 0,5 to 0,6 that's a N-S fence post that goes from (0,5) to (1,5).  if I take the abs difference, we get (1,0), a NS
+           from 1,5 to 1,6 that's a N-S fence post that goes from (1,5) to (2,5)
+From 4,5 to 4,4 that's a fence post that goes from (4,5) to (5,5) |0|1|2|3|4|5. if I take abs diff, we get (1,0)
+
+What about (24, 31) to (25, 31) the abs diff is (1, 0) in terms of positions, but the fence post is
+Fence post segments should always be sorted.
+
+Maybe I can represent them specifically to the region. In terms of Pos and Diff. Sort them by Diff, then in each diff, sort by row or col. look for continuous ones
+
+"""
 
 
 def find_regions(map: Map) -> list[Region]:
@@ -37,22 +63,20 @@ def find_regions(map: Map) -> list[Region]:
     MAX_COL = len(map[0]) - 1
 
     def visit_region(start: Pos) -> Region:
-        region = Region(
-            type=map[start.i][start.j],
-            positions=set(),
-            perimeter=0,
-        )
+        region = Region(type=map[start.i][start.j], positions=set(), fences=[])
 
         visited: set[Pos] = set()
-        next = deque([start])
+        next: deque[Tuple[Pos, Pos]] = deque([(Pos(-1, -1), start)])
         while next:
-            pos = next.pop()
+            prev, pos = next.pop()
+            dir = pos - prev
+            dir = Dir(dir.i, dir.j)
             if not 0 <= pos.i <= MAX_ROW or not 0 <= pos.j <= MAX_COL:
-                region.perimeter += 1
+                region.fences.append((prev, dir))
                 continue
 
             if map[pos.i][pos.j] != region.type:
-                region.perimeter += 1
+                region.fences.append((prev, dir))
                 continue
 
             if pos in visited:
@@ -61,7 +85,7 @@ def find_regions(map: Map) -> list[Region]:
 
             region.positions.add(pos)
             next_steps = [Pos(0, 1), Pos(0, -1), Pos(1, 0), Pos(-1, 0)]
-            next.extendleft(pos + step for step in next_steps)
+            next.extendleft((pos, pos + step) for step in next_steps)
 
         return region
 
@@ -80,7 +104,53 @@ def find_regions(map: Map) -> list[Region]:
 
 
 def sum_fence_costs(regions: list[Region]) -> int:
-    return sum(len(region.positions) * region.perimeter for region in regions)
+    return sum(
+        len(region.positions) * len(region.fences) for region in regions
+    )
+
+
+@dataclass
+class FenceGroup:
+    positions: list[Pos]
+    next_dir: Pos
+
+
+def region_sides(region: Region) -> int:
+    """
+    First, we group fence positions by the direction the fence faces.
+
+    Then, we sort the positions in each group to enable easy checking
+    of whether the next position is connected to the current side.
+    """
+    fence_groups: dict[Dir, FenceGroup] = {
+        Dir(-1, 0): FenceGroup([], Pos(0, 1)),  # N face, sort so next is right
+        Dir(1, 0): FenceGroup([], Pos(0, 1)),  # S face, sort so next is right
+        Dir(0, 1): FenceGroup([], Pos(1, 0)),  # E face, sort so next is below
+        Dir(0, -1): FenceGroup([], Pos(1, 0)),  # W face, sort so next is below
+    }
+
+    for pos, dir in region.fences:
+        fence_groups[dir].positions.append(pos)
+
+    sides = 0
+    for group in fence_groups.values():
+        i_sort = 1000**group.next_dir.j
+        j_sort = 1000**group.next_dir.i
+        group.positions.sort(key=lambda pos: pos.i * i_sort + pos.j * j_sort)
+
+        sides += 1 + sum(
+            1
+            for prev, pos in zip(group.positions, group.positions[1:])
+            if pos - prev != group.next_dir
+        )
+
+    return sides
+
+
+def sum_bulk_fence_costs(regions: list[Region]) -> int:
+    return sum(
+        len(region.positions) * region_sides(region) for region in regions
+    )
 
 
 if __name__ == '__main__':
@@ -96,5 +166,6 @@ if __name__ == '__main__':
 
     print('Day 12, Part 2')
     with timer():
-        result = 0
-    print(f'Result: {result}\n')    #
+        regions = find_regions(map)
+        result = sum_bulk_fence_costs(regions)
+    print(f'Result: {result}\n')    # 805814
