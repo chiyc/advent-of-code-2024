@@ -114,10 +114,9 @@ if __name__ == '__main__':
         while True:
             positions = predict_robots(robots, seconds)
             position_str = print_robot_positions(positions)
+            print(f'Seconds elapsed: {seconds}\n')
             if position_str == start:   # This might be a loop
-                print(
-                    f'Seconds elapsed: {seconds}'
-                )   # 10403 seconds (too high)
+                # 10403 seconds (too high)
                 exit()
             seconds += 1
     print(f'Result: {result}\n')  # 8159
