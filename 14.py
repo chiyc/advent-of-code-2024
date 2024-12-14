@@ -110,13 +110,18 @@ if __name__ == '__main__':
 
     print('Day 14, Part 2')
     with timer():
-        seconds = 5000  # 5000 (too low)
+        safety_for_seconds = []
+        seconds = 1
         while True:
             positions = predict_robots(robots, seconds)
+            safety = score_safety(positions)
             position_str = print_robot_positions(positions)
-            print(f'Seconds elapsed: {seconds}\n')
+            safety_for_seconds.append((seconds, safety, position_str))
             if position_str == start:   # This might be a loop
                 # 10403 seconds (too high)
-                exit()
+                break
             seconds += 1
+        safety_for_seconds.sort(key=lambda v: v[1])
+        result = safety_for_seconds[0][0]
     print(f'Result: {result}\n')  # 8159
+    print(safety_for_seconds[0][2])
