@@ -34,26 +34,18 @@ class Pos(NamedTuple):
 
 
 class Command:
-    U = Pos(-1, 0)
-    D = Pos(1, 0)
-    L = Pos(0, -1)
-    R = Pos(0, 1)
-    NOOP = Pos(0, 0)
+    _dirs = {
+        '^': Pos(-1, 0),
+        'v': Pos(1, 0),
+        '<': Pos(0, -1),
+        '>': Pos(0, 1),
+    }
 
     def __init__(self, c: str):
         self.move = c
 
-    def execute(self) -> Pos:
-        if self.move == '^':
-            return Command.U
-        elif self.move == 'v':
-            return Command.D
-        elif self.move == '<':
-            return Command.L
-        elif self.move == '>':
-            return Command.R
-        else:
-            return Command.NOOP
+    def get_dir(self) -> Pos:
+        return Command._dirs.get(self.move, Pos(0, 0))
 
     def __repr__(self) -> str:
         return f"Command('{self.move}')"
@@ -82,13 +74,20 @@ class Map:
             Box(tuple((pos,))),
             Box(tuple((pos - Pos(0, 1), pos))),
             Box(tuple((pos, pos + Pos(0, 1)))),
-        ]
+        ]   # Assumes boxes can be width 1 or 2
         for box in possible_boxes:
             if box in self._boxes:
                 return box
         return None
 
-    def free_to_move(self, start: Pos, dir: Pos) -> Optional[list[Box]]:
+    def free_to_move_boxes(self, start: Pos, dir: Pos) -> Optional[list[Box]]:
+        """
+        Returns a list of all boxes to be moved in direction of dir from start.
+            List of boxes is ordered by location from start to the free spaces.
+        Returns empty list if there's a free space to move but no boxes to move.
+        Returns None if movement is not possible.
+        """
+        # Uses dict to track boxes in order seen
         boxes_to_move: dict[Box, Literal[True]] = {}
 
         next: deque[list[Pos]] = deque([[start + dir]])
@@ -124,22 +123,13 @@ class Map:
             raise Exception('Cannot move box {box} into wall')
 
         self._boxes.remove(box)
-        next_box = Box(next_spaces)
-        if next_box in self._boxes:
+        if any(self.get_box(pos) for pos in next_spaces):
             self._boxes.add(box)
             raise Exception('Cannot move box {box} to {next}')
-        self._boxes.add(next_box)
+        self._boxes.add(Box(next_spaces))
 
     def get_boxes_coordinates(self) -> Iterable[Pos]:
         return [box[0] for box in self._boxes]
-
-    @property
-    def max_row(self) -> int:
-        return len(self._grid) - 1
-
-    @property
-    def max_col(self) -> int:
-        return len(self._grid[0]) - 1
 
 
 class Warehouse:
@@ -187,11 +177,11 @@ class Warehouse:
         assert robot_pos
         return Warehouse(Map(map_grid, boxes), Robot(robot_pos), commands)
 
-    def play(self) -> Union[Literal['EXIT'], None]:
+    def play(self) -> None:
         for command in self.commands:
-            dir = command.execute()
+            dir = command.get_dir()
 
-            free_to_move = self.map.free_to_move(self.robot.pos, dir)
+            free_to_move = self.map.free_to_move_boxes(self.robot.pos, dir)
             if free_to_move is None:
                 continue
 
@@ -199,7 +189,6 @@ class Warehouse:
                 self.map.move_box(box, dir)
 
             self.robot.pos += dir
-        return None
 
     def sum_gps_coordinates(self) -> int:
         return sum(
