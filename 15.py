@@ -1,7 +1,16 @@
 from __future__ import annotations
 
+from collections import deque
 from enum import Enum, auto
-from typing import Iterable, Literal, NamedTuple, Optional, Union
+from typing import (
+    Iterable,
+    Literal,
+    NamedTuple,
+    NewType,
+    Optional,
+    Tuple,
+    Union,
+)
 
 from lib import read_input, timer
 
@@ -55,38 +64,74 @@ class Robot:
         self.pos: Pos = position
 
 
+Box = NewType('Box', Tuple[Pos, ...])
+
+
 class Terrain(Enum):
     FLOOR = auto()
     WALL = auto()
 
 
 class Map:
-    def __init__(self, map_grid: list[list[Terrain]], boxes: set[Pos]):
+    def __init__(self, map_grid: list[list[Terrain]], boxes: set[Box]):
         self._grid = map_grid
         self._boxes = boxes
 
-    def next_free(self, start: Pos, dir: Pos) -> Optional[Pos]:
-        pos = start + dir
-        tile = self._grid[pos.i][pos.j]
-        while tile != Terrain.WALL:
-            if pos not in self._boxes:
-                return pos
-
-            pos += dir
-            tile = self._grid[pos.i][pos.j]
-
+    def get_box(self, pos: Pos) -> Optional[Box]:
+        possible_boxes = [
+            Box(tuple((pos,))),
+            Box(tuple((pos - Pos(0, 1), pos))),
+            Box(tuple((pos, pos + Pos(0, 1)))),
+        ]
+        for box in possible_boxes:
+            if box in self._boxes:
+                return box
         return None
 
-    def move_box(self, box: Pos, dir: Pos) -> None:
-        next = box + dir
-        if next in self._boxes or self._grid[next.i][next.j] == Terrain.WALL:
-            raise Exception('Cannot move box in {box} to {next}')
-        self._boxes.remove(box)
-        self._boxes.add(next)
+    def free_to_move(self, start: Pos, dir: Pos) -> Optional[list[Box]]:
+        boxes_to_move: dict[Box, Literal[True]] = {}
 
-    @property
-    def boxes(self) -> set[Pos]:
-        return self._boxes
+        next: deque[list[Pos]] = deque([[start + dir]])
+        while next:
+            positions = next.pop()
+            if any(self._grid[p.i][p.j] == Terrain.WALL for p in positions):
+                return None
+
+            boxes: set[Box] = set()
+            for pos in positions:
+                box = self.get_box(pos)
+                if box is not None:
+                    boxes.add(box)
+
+            for box in boxes:
+                boxes_to_move[box] = True
+                if dir in [Pos(1, 0), Pos(-1, 0)]:
+                    next.appendleft([pos + dir for pos in box])
+                elif dir == Pos(0, 1):
+                    next.appendleft([box[-1] + dir])
+                elif dir == Pos(0, -1):
+                    next.appendleft([box[0] + dir])
+                else:
+                    assert False
+
+        return list(boxes_to_move.keys())
+
+    def move_box(self, box: Box, dir: Pos) -> None:
+        next_spaces = tuple(pos + dir for pos in box)
+        if any(
+            self._grid[next.i][next.j] == Terrain.WALL for next in next_spaces
+        ):
+            raise Exception('Cannot move box {box} into wall')
+
+        self._boxes.remove(box)
+        next_box = Box(next_spaces)
+        if next_box in self._boxes:
+            self._boxes.add(box)
+            raise Exception('Cannot move box {box} to {next}')
+        self._boxes.add(next_box)
+
+    def get_boxes_coordinates(self) -> Iterable[Pos]:
+        return [box[0] for box in self._boxes]
 
     @property
     def max_row(self) -> int:
@@ -123,8 +168,10 @@ class Warehouse:
                 if x == '@':
                     robot_pos = Pos(i, len(row))
                     row.extend([Terrain.FLOOR] * width)
-                elif x == 'O':  # TODO: Wide boxes
-                    boxes.update([Pos(i, len(row) + w) for w in range(width)])
+                elif x == 'O':
+                    boxes.add(
+                        Box(tuple(Pos(i, len(row) + w) for w in range(width)))
+                    )
                     row.extend([Terrain.FLOOR] * width)
                 elif x == '#':
                     row.extend([Terrain.WALL] * width)
@@ -143,19 +190,21 @@ class Warehouse:
     def play(self) -> Union[Literal['EXIT'], None]:
         for command in self.commands:
             dir = command.execute()
-            next_free = self.map.next_free(self.robot.pos, dir)
-            if next_free is None:
+
+            free_to_move = self.map.free_to_move(self.robot.pos, dir)
+            if free_to_move is None:
                 continue
 
-            pos = next_free - dir
-            while pos != self.robot.pos:
-                self.map.move_box(pos, dir)
-                pos -= dir
+            for box in reversed(free_to_move):
+                self.map.move_box(box, dir)
+
             self.robot.pos += dir
         return None
 
     def sum_gps_coordinates(self) -> int:
-        return sum(i * 100 + j for i, j in self.map.boxes)
+        return sum(
+            pos.i * 100 + pos.j for pos in self.map.get_boxes_coordinates()
+        )
 
 
 if __name__ == '__main__':
@@ -171,4 +220,4 @@ if __name__ == '__main__':
         world = Warehouse.from_input_widened(read_input(15))
         world.play()
         result = world.sum_gps_coordinates()
-    print(f'Result: {result}\n')    #
+    print(f'Result: {result}\n')    # 1472235
