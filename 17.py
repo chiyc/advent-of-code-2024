@@ -1,7 +1,7 @@
 import re
 
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import Iterable, Optional
 
 from lib import read_input, timer
 
@@ -155,10 +155,11 @@ def do_part2(cpu: Computer) -> int:
     values for reg.a, then in the next iteration, test the possible values reg.a would've been in
     the previous iteration. Continue until we get the final answer.
     """
+    DIVISOR = 8   # Gleaned from observing the program
     final_output = cpu.program.copy()
 
     # Start with these values of reg.a
-    a_set = [1, 2, 3, 4, 5, 6, 7]
+    a_set: Iterable[int] = range(DIVISOR**0, DIVISOR**1)
     # Process the final output in reverse
     for i in reversed(range(0, len(final_output))):
         output = final_output[i:]
@@ -176,7 +177,7 @@ def do_part2(cpu: Computer) -> int:
             elif cpu.output == output:
                 # Getting the range of next register A values to test here depends
                 # on knowing that it goes through integer division by 8 each time.
-                next_a.extend(range(a * 8, (a + 1) * 8))
+                next_a.extend(range(a * DIVISOR, (a + 1) * DIVISOR))
 
         a_set = next_a
 
