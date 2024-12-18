@@ -137,7 +137,7 @@ def do_part2(cpu: Computer) -> int:
     b2 <= b1 ^ c
     b3 <= b2 ^ 3
 
-    a_next <= a // 2 ** 3
+    a_next <= a // 2 ** 3     # This 2 ** 3 is the key magic constant we use in the solution.
     output <= b3 % 8
     repeat if a_next != 0
 
