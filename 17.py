@@ -155,7 +155,6 @@ def do_part2(cpu: Computer) -> int:
     values for reg.a, then in the next iteration, test the possible values reg.a would've been in
     the previous iteration. Continue until we get the final answer.
     """
-    # 2,4,1,3,7,5,4,1,1,3,0,3,5,5,3,0
     final_output = cpu.program.copy()
 
     # Start with these values of reg.a
@@ -175,6 +174,8 @@ def do_part2(cpu: Computer) -> int:
 
             # Otherwise, collect the next set of values to test
             elif cpu.output == output:
+                # Getting the range of next register A values to test here depends
+                # on knowing that it goes through integer division by 8 each time.
                 next_a.extend(range(a * 8, (a + 1) * 8))
 
         a_set = next_a
