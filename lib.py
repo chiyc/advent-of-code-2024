@@ -3,12 +3,12 @@ import os
 
 from time import perf_counter
 from types import TracebackType
-from typing import Iterable, Union
+from typing import Iterator, Union
 
 from urllib import request
 
 
-def read_input(day: Union[int, str]) -> Iterable[str]:
+def read_input(day: Union[int, str]) -> Iterator[str]:
     url = f'https://adventofcode.com/2024/day/{day}/input'
     session = os.environ.get('AOC_SESSION')
     req = request.Request(url, headers={'Cookie': f'session={session}'})
