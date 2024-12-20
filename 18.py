@@ -127,14 +127,14 @@ def find_shortest_distance(map: Map) -> Shortest:
 if __name__ == '__main__':
     map, obstacles = parse_input()
 
-    print('Day 16, Part 1')
+    print('Day 18, Part 1')
     with timer():
         map.add_obstacles(obstacles[:1024])
         shortest_distance = find_shortest_distance(map)
         part1_result = shortest_distance[EXIT]
     print(f'Result: {part1_result}\n')    # 246
 
-    print('Day 16, Part 2')
+    print('Day 18, Part 2')
     with timer():
         byte = bisect.bisect_left(
             [i for i in range(len(obstacles))],
