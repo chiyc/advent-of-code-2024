@@ -22,28 +22,6 @@ class Pos(NamedTuple):
         return f'Pos({self.i}, {self.j})'
 
 
-class Reindeer(NamedTuple):
-    pos: Pos
-    facing: Pos
-
-
-TURNS = [Pos(-1, 0), Pos(0, 1), Pos(1, 0), Pos(0, -1)]
-
-
-def turn_reindeer(facing: Pos, reverse: bool = False) -> Pos:
-    step = -1 if reverse else 1
-    current_facing = TURNS.index(facing)
-    next_facing = (current_facing + step) % len(TURNS)
-    return TURNS[next_facing]
-
-
-def next_turns(facing: Pos) -> list[Pos]:
-    return [
-        turn_reindeer(facing, reverse=False),
-        turn_reindeer(facing, reverse=True),
-    ]
-
-
 class Terrain(Enum):
     FLOOR = auto()
     WALL = auto()
