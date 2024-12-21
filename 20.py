@@ -150,14 +150,14 @@ def get_cuts(steps: int) -> set[Pos]:
 if __name__ == '__main__':
     map, start, end = parse_input()
 
-    print('Day 16, Part 1')
+    print('Day 20, Part 1')
     with timer():
         shortest = find_shortest_distance(map, end, start)
         shortcuts = find_shortcuts(shortest, 2)
         result = sum(1 for d in shortcuts.values() if d >= 100)
     print(f'Result: {result}\n')    # 1263
 
-    print('Day 16, Part 2')
+    print('Day 20, Part 2')
     with timer():
         shortcuts = find_shortcuts(shortest, 20)
         result = sum(1 for d in shortcuts.values() if d >= 100)
