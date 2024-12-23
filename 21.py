@@ -47,24 +47,12 @@ KEYPAD = Pad(
     ]
 )
 
-KEYPAD_POS = {
-    key: Pos(i, j) for i, row in enumerate(KEYPAD) for j, key in enumerate(row)
-}
-
-KEYPAD_START = KEYPAD_POS['A']
-
 DIRPAD = Pad(
     [
         ['#', '^', 'A'],
         ['<', 'v', '>'],
     ]
 )
-
-DIRPAD_POS = {
-    key: Pos(i, j) for i, row in enumerate(DIRPAD) for j, key in enumerate(row)
-}
-
-DIRPAD_START = DIRPAD_POS['A']
 
 DIR_KEY = {
     Pos(0, 1): '>',
@@ -75,13 +63,11 @@ DIR_KEY = {
 
 DIRS = DIR_KEY.keys()
 
-KEY_DIR = {dir: pos for pos, dir in DIR_KEY.items()}
-
 
 Path = NewType('Path', list[Pos])
 
 
-def path_button_positions(pad: Pad, start: Pos, end: Pos) -> list[Path]:
+def path_button_positions(pad: Pad, start: Pos, end: Pos) -> list[list[str]]:
     shortest_paths: list[Path] = []
 
     next: deque[Tuple[Pos, Path]] = deque([(start, Path([]))])
@@ -112,18 +98,24 @@ def path_button_positions(pad: Pad, start: Pos, end: Pos) -> list[Path]:
 
         next.extendleft((pos + dir, next_path) for dir in DIRS)
 
-    return shortest_paths
+    return [
+        [DIR_KEY[dir] for dir in get_path_dirs(path)] + ['A']
+        for path in shortest_paths
+    ]
 
 
 def get_path_dirs(path: Path) -> list[Pos]:
     return [pos - prev for prev, pos in zip(path, path[1:])]
 
 
-def shortest_combo(combos: list[list[str]]) -> list[str]:
+def prune_combos(combos: list[list[str]]) -> list[list[str]]:
     lengths = [len(combo) for combo in combos]
     min_length = min(lengths)
-    min_index = lengths.index(min_length)
-    return combos[min_index]
+    return [c for c in combos if len(c) == min_length]
+
+
+def shortest_combo(combos: list[list[str]]) -> list[str]:
+    return prune_combos(combos)[0]
 
 
 def get_dirpad_press_combos(pad: Pad, buttons: list[str]) -> list[list[str]]:
@@ -134,28 +126,20 @@ def get_dirpad_press_combos(pad: Pad, buttons: list[str]) -> list[list[str]]:
     }
     start_pos = pad_pos['A']
 
-    press_combos: list[list[str]] = []
+    press_combos: list[list[str]] = [[]]
 
     pos = start_pos
     for button in buttons:
         button_pos = pad_pos[button]
 
         paths = path_button_positions(pad, pos, button_pos)
-        if not press_combos:
-            press_combos = [
-                [DIR_KEY[dir] for dir in get_path_dirs(p)] + ['A']
-                for p in paths
-            ]
-        else:
-            press_combos = [
-                combo + [DIR_KEY[dir] for dir in get_path_dirs(p)] + ['A']
-                for p in paths
-                for combo in press_combos
-            ]
+        press_combos = [
+            combo + path for path in paths for combo in press_combos
+        ]
 
         pos = button_pos
 
-    return press_combos
+    return prune_combos(press_combos)
 
 
 def get_button_sequence(code: Code) -> list[str]:
